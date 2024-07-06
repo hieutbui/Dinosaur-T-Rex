@@ -13,6 +13,22 @@ public class PlayerScript : MonoBehaviour {
     /// </summary>
     public Vector2 velocity;
     /// <summary>
+    /// The maximum velocity of the player
+    /// </summary>
+    public float maxXVelocity = 100;
+    /// <summary>
+    /// The maximum acceleration of the player
+    /// </summary>
+    public float maxAcceleration = 10;
+    /// <summary>
+    /// The acceleration of the player
+    /// </summary>
+    public float acceleration = 10;
+    /// <summary>
+    /// The distance the player has traveled
+    /// </summary>
+    public float distance = 0;
+    /// <summary>
     /// The force applied to the player when jumping
     /// </summary>
     public float jumpForce = 20;
@@ -62,6 +78,13 @@ public class PlayerScript : MonoBehaviour {
             CheckAndResetGroundState(ref pos);
         }
 
+        UpdateDistance();
+
+        if (isGrounded) {
+            UpdateAcceleration();
+            UpdateVelocity();
+        }
+
         transform.position = pos;
     }
 
@@ -96,7 +119,7 @@ public class PlayerScript : MonoBehaviour {
     /// </summary>
     private void HandleHoldJump() {
         if (isHoldingJump) {
-            jumpTime += Time.deltaTime;
+            jumpTime += Time.fixedDeltaTime;
             if (jumpTime >= maxJumpTime) {
                 isHoldingJump = false;
             }
@@ -108,7 +131,7 @@ public class PlayerScript : MonoBehaviour {
     /// </summary>
     /// <param name="pos">The current position of the player</param>
     private void UpdatePositionWhenJumping(ref Vector2 pos) {
-        pos.y += velocity.y * Time.deltaTime;
+        pos.y += velocity.y * Time.fixedDeltaTime;
     }
 
     /// <summary>
@@ -116,7 +139,7 @@ public class PlayerScript : MonoBehaviour {
     /// </summary>
     private void CheckAndHandleReleaseSpaceWhenJumping() {
         if (!isHoldingJump) {
-            velocity.y += gravity * Time.deltaTime;
+            velocity.y += gravity * Time.fixedDeltaTime;
         }
     }
 
@@ -128,6 +151,31 @@ public class PlayerScript : MonoBehaviour {
         if (pos.y <= groundHeight) {
             pos.y = groundHeight;
             isGrounded = true;
+        }
+    }
+
+    /// <summary>
+    /// Update the distance the player has traveled
+    /// </summary>
+    private void UpdateDistance() {
+        distance += velocity.x * Time.fixedDeltaTime;
+    }
+
+    /// <summary>
+    /// Update the acceleration of the player
+    /// </summary>
+    private void UpdateAcceleration() {
+        float velocityRatio = velocity.x / maxXVelocity;
+        acceleration = maxAcceleration * (1 - velocityRatio);
+    }
+
+    /// <summary>
+    /// Update the velocity of the player
+    /// </summary>
+    private void UpdateVelocity() {
+        velocity.x += acceleration * Time.fixedDeltaTime;
+        if (velocity.x >= maxXVelocity) {
+            velocity.x = maxXVelocity;
         }
     }
 }
